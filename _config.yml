@@ -2,7 +2,7 @@
 title: "Adewole Charles Blog"
 description: "Deep dives into C#, .NET internals, async/await, EF Core, and performance."
 baseurl: ""
-url: "https://<your-username>.github.io"
+url: "https://adewoleadenigbagbe.github.io/"
 
 # Chirpy Theme
 remote_theme: cotes2020/jekyll-theme-chirpy
