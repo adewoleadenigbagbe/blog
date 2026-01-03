@@ -7,3 +7,7 @@ gem "jekyll-remote-theme"
 gem "jekyll-paginate"
 gem "jekyll-seo-tag"
 gem "jekyll-archives"
+gem "jekyll-include-cache"
+
+gem "jekyll-compose"
+gem "jekyll-optional-front-matter"

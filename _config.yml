@@ -13,7 +13,9 @@ plugins:
   - jekyll-paginate
   - jekyll-seo-tag
   - jekyll-archives
-  
+  - jekyll-include-cache
+  - jekyll-compose          # optional
+  - jekyll-optional-front-matter  # optional
 
 # Dark Mode
 theme_mode: # leave empty → system preference, toggle visible
