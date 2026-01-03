@@ -9,6 +9,7 @@ remote_theme: cotes2020/jekyll-theme-chirpy
 plugins:
   - jekyll-feed
   - jekyll-sitemap
+  - jekyll-remote-theme
 
 # Dark Mode
 theme_mode: # leave empty → system preference, toggle visible
