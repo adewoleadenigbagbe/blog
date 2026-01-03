@@ -1,0 +1,26 @@
+# Site settings
+title: "Adewole Charles Blog"
+description: "Deep dives into C#, .NET internals, async/await, EF Core, and performance."
+baseurl: ""
+url: "https://<your-username>.github.io"
+
+# Chirpy Theme
+remote_theme: cotes2020/jekyll-theme-chirpy
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+
+# Dark Mode
+theme_mode: # leave empty → system preference, toggle visible
+
+# Sidebar options
+sidebar:
+  profile: true
+  about: true
+  categories: true
+  tags: true
+  social_links: true
+
+sidebar_pages:
+  - title: "Archives"
+    url: /archives/
