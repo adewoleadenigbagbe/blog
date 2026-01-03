@@ -11,6 +11,7 @@ plugins:
   - jekyll-sitemap
   - jekyll-remote-theme
   - jekyll-paginate
+  - jekyll-seo-tag
 
 # Dark Mode
 theme_mode: # leave empty → system preference, toggle visible
