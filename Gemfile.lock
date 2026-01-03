@@ -1,11 +1,6 @@
-
 GEM
   remote: https://rubygems.org/
   specs:
-    addressable (2.8.1)
-    colorator (1.1.0)
-    concurrent-ruby (1.2.2)
-    i18n (1.14.1)
     jekyll (4.2.5)
       addressable (~> 2.8)
       colorator (~> 1.1)
@@ -40,9 +35,6 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  jekyll (~> 4.2.5)
-  jekyll-feed
-  jekyll-sitemap
   jekyll-theme-chirpy
 
 BUNDLED WITH
