@@ -1,7 +1,7 @@
 # Site settings
 title: "Adewole Charles Blog"
 description: "Deep dives into C#, .NET internals, async/await, EF Core, and performance."
-baseurl: ""
+baseurl: "/blog"
 url: "https://adewoleadenigbagbe.github.io/"
 
 # Chirpy Theme
