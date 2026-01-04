@@ -20,8 +20,8 @@
 
   <link rel="alternate" type="application/rss+xml" title="{{ site.name }}" href="{{ site.url }}/feed.xml">
   <link rel="canonical" href="{{ site.url }}{{ page.url | replace:'index.html',''}}">
-  <link rel="stylesheet" href="/css/main.css">
-  <link rel="stylesheet" href="/css/syntax.css">
+  <link rel="stylesheet" href="{{ "/css/main.css" | relative_url }}">
+  <link rel="stylesheet" href="{{ "/css/syntax.css" | relative_url }}">
   {%- if page.balloon_css -%}
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/balloon-css/1.2.0/balloon.min.css">
   {%- endif -%}
