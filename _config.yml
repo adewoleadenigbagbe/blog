@@ -3,6 +3,7 @@ name: Adenigbagbe Adewole
 title: Adenigbagbe Adewole
 description: "Adenigbagbe Adewole's blog about programming - C#, Golang, Typescript, Javascript."
 url: https://adewoleadenigbagbe.github.io/
+baseurl: "/blog"
 highlighter: rouge
 permalink: /posts/:title/
 markdown: kramdown
