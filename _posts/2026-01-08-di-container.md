@@ -1,12 +1,12 @@
 ---
 layout: post
-title: 'Building your DI Containers'
-date:   2010-03-01 12:00:00
+title: 'Building your DI Container'
+date:   2026-01-08 12:00:00
 categories:
   - csharp
 ---
 
-Most developers that programs in OOP languages uses DI everyday but they dont understand why it is been used, before we dive deeper into DI. 
+Most developers that programs in OOP languages uses DI everyday but they dont understand why it is been used or what actually happens under the hood, before we dive deeper into DI. 
 we need to understand inheritance (for base and derived classes) and interfaces in OOP.
 
 Class Inheritance is a mechanism where one class (the Child) adopts the internal logic, data, and behavior of another class (the Parent). 
@@ -16,6 +16,7 @@ When you use inheritance, you are essentially saying,
 "This new thing is a specialized version of that existing thing." 
 It allows you to write code once in a base class and have it automatically available in all derived classes, ensuring that they share the same "DNA."
 
+```c#
 // Base Class (Parent)
 public class Vehicle 
 {
@@ -32,6 +33,7 @@ public class Car : Vehicle
 {
     public int DoorCount { get; set; }
 }
+```
 
 
 An interface is essentially a blueprint or a "contract" that defines a set of related functionalities.
@@ -39,7 +41,8 @@ When a class or a struct implements an interface, it is making a promise to prov
 
 Basically you want implement Logging system, you would want to either log to a file, to a database or redis. you would have something like 
 
-Interface
+```c#
+//Interface
 public interface ILogger
 {
   void Log(string message);
@@ -72,8 +75,9 @@ public class RedisLogger : ILogger
   }
 }
 
+```
 
-Scenario 
+##### Scenario 
 Now say you have a huge codebase with thousand of files and at least the logging system was implemented in each file. 
 If you are probably logging to the database for now and because of perfomance issue your app is facing , you decide to log to a file, 
 it means you need make changes to each file from DatabaseLogger to FileLogger, 
@@ -82,17 +86,20 @@ Every file would have a service class (in this case interface or base class for 
 but the implementation would be done in just one file, say your Startup.cs/ Program.cs file
 
 
+```markdown
 container.Register<ILogger, FileLogger>();
+```
 
 If we decide change to log to redis, i just need to update the one line
 
+```markdown
 container.Register<ILogger, RedisLogger>();
+```
 
-and everthing works as expected
+and everything works as expected
 
 
-
-Most C# developers _use_ DI, but very few understand what actually happens under the hood. In this post, we’ll build a **minimal but functional DI container** from scratch and learn how real frameworks like Microsoft.Extensions.DependencyInjection work internally.
+In this post, we’ll build a **minimal but functional DI container** from scratch and learn how real frameworks like Microsoft.Extensions.DependencyInjection work internally.
 
 By the end, you’ll understand:
 
@@ -114,11 +121,15 @@ A Dependency Injection (DI) container is simply an object that:
 
 Instead of this:
 
-`var service = new OrderService(new SqlRepository());`
+```markdown
+var service = new OrderService(new SqlRepository());
+```
 
 You write:
 
-`var service = container.Resolve<IOrderService>();`
+```markdown
+var service = container.Resolve<IOrderService>();
+```
 
 Step 1: The Simplest Possible Container
 
@@ -193,7 +204,6 @@ public class ServiceDescriptor
 
 Container with lifetime support:
 
-
 `public class Container`
 `{`
     `private readonly Dictionary<Type, ServiceDescriptor> _services = new();`
@@ -241,8 +251,10 @@ Container with lifetime support:
 
 Usage:
 
-`container.Register<IRepository, SqlRepository>(Lifetime.Singleton);`
-`container.Register<IOrderService, OrderService>(Lifetime.Transient);`
+```markdown
+container.Register<IRepository, SqlRepository>(Lifetime.Singleton);
+container.Register<IOrderService, OrderService>(Lifetime.Transient);
+```
 
 Adding Scoped Lifetimes to Our DI Container
 
