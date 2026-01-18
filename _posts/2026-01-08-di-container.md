@@ -6,7 +6,7 @@ categories:
   - csharp
 ---
 
-Most developers that programs in OOP languages uses DI everyday but they dont understand why it is been used or what actually happens under the hood, before we dive deeper into DI. 
+Most developers that programs in OOP languages uses DI everyday but they dont understand why it is been used or what actually happens under the hood, before we dive deeper into DI,
 we need to understand inheritance (for base and derived classes) and interfaces in OOP.
 
 Class Inheritance is a mechanism where one class (the Child) adopts the internal logic, data, and behavior of another class (the Parent). 
@@ -109,7 +109,7 @@ By the end, you’ll understand:
     
 - How lifetimes like **Transient**, **Scoped**, and **Singleton** are managed
 
-What is a DI Container?
+#### What is a DI Container?
 
 A Dependency Injection (DI) container is simply an object that:
 
@@ -131,63 +131,67 @@ You write:
 var service = container.Resolve<IOrderService>();
 ```
 
-Step 1: The Simplest Possible Container
+## Step 1: The Simplest Possible Container
 
 We’ll start with a very basic container that uses reflection.
 
-`public class SimpleContainer`
-`{`
-    `public T Resolve<T>() => (T)Resolve(typeof(T));`
+```c#
+public class SimpleContainer
+{
+    public T Resolve<T>() => (T)Resolve(typeof(T));
+    
+    private object Resolve(Type type)
+    {
+        var ctor = type.GetConstructors().Single();
+        var parameters = ctor.GetParameters();
 
-    `private object Resolve(Type type)`
-    `{`
-        `var ctor = type.GetConstructors().Single();`
-        `var parameters = ctor.GetParameters();`
+        var args = parameters
+            .Select(p => Resolve(p.ParameterType))
+            .ToArray();
 
-        `var args = parameters`
-            `.Select(p => Resolve(p.ParameterType))`
-            `.ToArray();`
-
-        `return Activator.CreateInstance(type, args)!;`
-    `}`
-`}`
+        return Activator.CreateInstance(type, args)!;
+    }
+}
+```
 
 ## Step 2: Add Registrations (Interfaces → Implementations)
 
 Now let’s make it useful.
 
-`public class DiContainer`
-`{`
-    `private readonly Dictionary<Type, Type> _registrations = new();`
+```c#
+public class DiContainer
+{
+    private readonly Dictionary<Type, Type> _registrations = new();
 
-    `public void Register<TService, TImpl>()`
-        `where TImpl : TService`
-    `{`
-        `_registrations[typeof(TService)] = typeof(TImpl);`
-    `}`
+    public void Register<TService, TImpl>()
+        where TImpl : TService
+    {
+        _registrations[typeof(TService)] = typeof(TImpl);
+    }
 
-    `public T Resolve<T>() => (T)Resolve(typeof(T));`
+    public T Resolve<T>() => (T)Resolve(typeof(T));
 
-    `private object Resolve(Type type)`
-    `{`
-        `if (_registrations.TryGetValue(type, out var implType))`
-            `type = implType;`
+    private object Resolve(Type type)
+    {
+        if (_registrations.TryGetValue(type, out var implType))
+            type = implType;
 
-        `var ctor = type.GetConstructors().Single();`
-        `var parameters = ctor.GetParameters();`
+        var ctor = type.GetConstructors().Single();
+        var parameters = ctor.GetParameters();
 
-        `var args = parameters`
-            `.Select(p => Resolve(p.ParameterType))`
-            `.ToArray();`
+        var args = parameters
+            .Select(p => Resolve(p.ParameterType))
+            .ToArray();
 
-        `return Activator.CreateInstance(type, args)!;`
-    `}`
-`}`
+        return Activator.CreateInstance(type, args)!;
+    }
+}
+```
 
-Step 3: Add Lifetimes (Transient & Singleton)
+## Step 3: Add Lifetimes (Transient & Singleton)
 
-Let’s support real-world behavior.
-
+```c#
+//Let’s support real-world behavior.
 public enum Lifetime
 {
     Transient,
@@ -202,52 +206,52 @@ public class ServiceDescriptor
     public object? Instance { get; set; }
 }
 
-Container with lifetime support:
+ // Container with lifetime support:
+public class Container
+{
+    private readonly Dictionary<Type, ServiceDescriptor> _services = new();
 
-`public class Container`
-`{`
-    `private readonly Dictionary<Type, ServiceDescriptor> _services = new();`
+    public void Register<TService, TImpl>(Lifetime lifetime)
+    {
+        _services[typeof(TService)] = new ServiceDescriptor
+        {
+            ServiceType = typeof(TService),
+            ImplType = typeof(TImpl),
+            Lifetime = lifetime
+        };
+    }
 
-    `public void Register<TService, TImpl>(Lifetime lifetime)`
-    `{`
-        `_services[typeof(TService)] = new ServiceDescriptor`
-        `{`
-            `ServiceType = typeof(TService),`
-            `ImplType = typeof(TImpl),`
-            `Lifetime = lifetime`
-        `};`
-    `}`
+    public T Resolve<T>() => (T)Resolve(typeof(T));
 
-    `public T Resolve<T>() => (T)Resolve(typeof(T));`
+    private object Resolve(Type type)
+    {
+        if (!_services.TryGetValue(type, out var desc))
+            desc = new ServiceDescriptor
+            {
+                ServiceType = type,
+                ImplType = type,
+                Lifetime = Lifetime.Transient
+            };
 
-    `private object Resolve(Type type)`
-    `{`
-        `if (!_services.TryGetValue(type, out var desc))`
-            `desc = new ServiceDescriptor`
-            `{`
-                `ServiceType = type,`
-                `ImplType = type,`
-                `Lifetime = Lifetime.Transient`
-            `};`
+        if (desc.Lifetime == Lifetime.Singleton && desc.Instance != null)
+            return desc.Instance;
 
-        `if (desc.Lifetime == Lifetime.Singleton && desc.Instance != null)`
-            `return desc.Instance;`
+        var ctor = desc.ImplType.GetConstructors().Single();
+        var args = ctor
+            .GetParameters()
+            .Select(p => Resolve(p.ParameterType))
+            .ToArray();
 
-        `var ctor = desc.ImplType.GetConstructors().Single();`
-        `var args = ctor`
-            `.GetParameters()`
-            `.Select(p => Resolve(p.ParameterType))`
-            `.ToArray();`
+        var obj = Activator.CreateInstance(desc.ImplType, args)!;
 
-        `var obj = Activator.CreateInstance(desc.ImplType, args)!;`
+        if (desc.Lifetime == Lifetime.Singleton)
+            desc.Instance = obj;
 
-        `if (desc.Lifetime == Lifetime.Singleton)`
-            `desc.Instance = obj;`
+        return obj;
+    }
+}
 
-        `return obj;`
-    `}`
-`}`
-
+```
 
 Usage:
 
@@ -273,33 +277,37 @@ In ASP.NET Core, a scope usually maps to a **HTTP request** via IServiceScopeFac
 
 Let’s implement the same concept.
 
-Step 1 — Extend the Lifetime Enum
+###  Extend the Lifetime Enum
 
-`public enum Lifetime`
-`{`
-    `Transient,`
-    `Singleton,`
-    `Scoped`
-`}`
+```c#
+public enum Lifetime
+{
+    Transient,
+    Singleton,
+    Scoped
+}
 
-## Step 2 — Create a Scope Object
+```
+### Create a Scope Object
 
 A scope holds instances that should live only inside that scope.
 
-`public class Scope`
-`{`
-    `private readonly Dictionary<Type, object> _scopedInstances = new();`
+```c#
+public class Scope
+{
+    private readonly Dictionary<Type, object> _scopedInstances = new();
 
-    `public object? Get(Type type)`
-        `=> _scopedInstances.TryGetValue(type, out var instance)` 
-            `? instance` 
-            `: null;`
+    public object? Get(Type type)
+        => _scopedInstances.TryGetValue(type, out var instance) 
+            ? instance 
+            : null;
 
-    `public void Set(Type type, object instance)`
-        `=> _scopedInstances[type] = instance;`
-`}`
+    public void Set(Type type, object instance)
+        => _scopedInstances[type] = instance;
+}
+```
 
-## Step 3 — Modify the Container to Support Scopes
+### Modify the Container to Support Scopes
 
 We’ll split resolution into two layers:
 
@@ -307,116 +315,116 @@ We’ll split resolution into two layers:
     
 - Scope → holds scoped instances
 
+```c#
+public class Container
+{
+    private readonly Dictionary<Type, ServiceDescriptor> _services = new();
+    private readonly Dictionary<Type, object> _singletons = new();
 
-`public class Container`
-`{`
-    `private readonly Dictionary<Type, ServiceDescriptor> _services = new();`
-    `private readonly Dictionary<Type, object> _singletons = new();`
+    public void Register<TService, TImpl>(Lifetime lifetime)
+    {
+        _services[typeof(TService)] = new ServiceDescriptor
+        {
+            ServiceType = typeof(TService),
+            ImplType = typeof(TImpl),
+            Lifetime = lifetime
+        };
+    }
 
-    `public void Register<TService, TImpl>(Lifetime lifetime)`
-    `{`
-        `_services[typeof(TService)] = new ServiceDescriptor`
-        `{`
-            `ServiceType = typeof(TService),`
-            `ImplType = typeof(TImpl),`
-            `Lifetime = lifetime`
-        `};`
-    `}`
+    public Scope CreateScope() => new Scope();
 
-    `public Scope CreateScope() => new Scope();`
+    public T Resolve<T>(Scope? scope = null)
+        => (T)Resolve(typeof(T), scope);
 
-    `public T Resolve<T>(Scope? scope = null)`
-        `=> (T)Resolve(typeof(T), scope);`
+    private object Resolve(Type type, Scope? scope)
+    {
+        if (!_services.TryGetValue(type, out var desc))
+            desc = new ServiceDescriptor
+            {
+                ServiceType = type,
+                ImplType = type,
+                Lifetime = Lifetime.Transient
+            };
 
-    `private object Resolve(Type type, Scope? scope)`
-    `{`
-        `if (!_services.TryGetValue(type, out var desc))`
-            `desc = new ServiceDescriptor`
-            `{`
-                `ServiceType = type,`
-                `ImplType = type,`
-                `Lifetime = Lifetime.Transient`
-            `};`
+        // Singleton handling
+        if (desc.Lifetime == Lifetime.Singleton)
+        {
+            if (_singletons.TryGetValue(type, out var instance))
+                return instance;
 
-        `// Singleton handling`
-        `if (desc.Lifetime == Lifetime.Singleton)`
-        `{`
-            `if (_singletons.TryGetValue(type, out var instance))`
-                `return instance;`
+            var created = CreateInstance(desc.ImplType, scope);
+            _singletons[type] = created;
+            return created;
+        }
 
-            `var created = CreateInstance(desc.ImplType, scope);`
-            `_singletons[type] = created;`
-            `return created;`
-        `}`
+        // Scoped handling
+        if (desc.Lifetime == Lifetime.Scoped)
+        {
+            if (scope == null)
+                throw new InvalidOperationException("No active scope.");
 
-        `// Scoped handling`
-        `if (desc.Lifetime == Lifetime.Scoped)`
-        `{`
-            `if (scope == null)`
-                `throw new InvalidOperationException("No active scope.");`
+            var existing = scope.Get(type);
+            if (existing != null)
+                return existing;
 
-            `var existing = scope.Get(type);`
-            `if (existing != null)`
-                `return existing;`
+            var created = CreateInstance(desc.ImplType, scope);
+            scope.Set(type, created);
+            return created;
+        }
 
-            `var created = CreateInstance(desc.ImplType, scope);`
-            `scope.Set(type, created);`
-            `return created;`
-        `}`
+        // Transient
+        return CreateInstance(desc.ImplType, scope);
+    }
 
-        `// Transient`
-        `return CreateInstance(desc.ImplType, scope);`
-    `}`
+    private object CreateInstance(Type type, Scope? scope)
+    {
+        var ctor = type.GetConstructors().Single();
+        var args = ctor.GetParameters()
+            .Select(p => Resolve(p.ParameterType, scope))
+            .ToArray();
 
-    `private object CreateInstance(Type type, Scope? scope)`
-    `{`
-        `var ctor = type.GetConstructors().Single();`
-        `var args = ctor.GetParameters()`
-            `.Select(p => Resolve(p.ParameterType, scope))`
-            `.ToArray();`
+        return Activator.CreateInstance(type, args)!;
+    }
+}
 
-        `return Activator.CreateInstance(type, args)!;`
-    `}`
-`}`
+```
+### Example Usage of Scoped Services
 
-Step 4 — Example Usage of Scoped Services
+```c#
 
+container.Register<IRepository, Repository>(Lifetime.Scoped);
+container.Register<IOrderService, OrderService>(Lifetime.Transient);
 
-`container.Register<IRepository, Repository>(Lifetime.Scoped);`
-`container.Register<IOrderService, OrderService>(Lifetime.Transient);`
+var scope1 = container.CreateScope();
+var svc1a = container.Resolve<IRepository>(scope1);
+var svc1b = container.Resolve<IRepository>(scope1);
 
-`var scope1 = container.CreateScope();`
-`var svc1a = container.Resolve<IRepository>(scope1);`
-`var svc1b = container.Resolve<IRepository>(scope1);`
+var scope2 = container.CreateScope();
+var svc2  = container.Resolve<IRepository>(scope2);
 
-`var scope2 = container.CreateScope();`
-`var svc2  = container.Resolve<IRepository>(scope2);`
+// Same within a scope → true
+Console.WriteLine(object.ReferenceEquals(svc1a, svc1b));
 
-`// Same within a scope → true`
-`Console.WriteLine(object.ReferenceEquals(svc1a, svc1b));`
+// Different across scopes → false
+Console.WriteLine(object.ReferenceEquals(svc1a, svc2));
 
-`// Different across scopes → false`
-`Console.WriteLine(object.ReferenceEquals(svc1a, svc2));`
-
+```
 ## How This Maps to ASP.NET Core
 
 ASP.NET Core uses the exact same idea internally:
 
-- Scope = HTTP request
-    
-- Singletons = App lifetime
-    
+- Scope = HTTP request   
+- Singletons = App lifetime 
 - Transients = Always new
     
-
 This is what happens under the hood of Microsoft.Extensions.DependencyInjection.
 
+You can get code samples for this post here [DI Containers](https://github.com/adewoleadenigbagbe/Blog-Code-Samples/tree/main/DIContainers)
 
+##### There are more to DI that this post does not address. We might look into it in the future
 
-There are more to DI such that this post does not address.
-
-Other Injection method (method, property)
-Circular dependency detect
-Using Expression trees instead of reflection which is slow
-Open generics
-Code generation for performance (instead of slow reflection)
+- Other Injection method (method, property)
+- Circular dependency detect
+- Using Expression trees instead of reflection which is slow
+- Open generics
+- Code generation for performance (instead of slow reflection)
