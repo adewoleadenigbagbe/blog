@@ -8,7 +8,7 @@
   --heading-border-color: #444;
 }
 
-* { margin: 0; padding: 0; }
+* { padding: 0; }
 html, body { height: 100%; }
 
 body {
@@ -31,7 +31,6 @@ h1, h2, h3, h4, h5, h6, strong { color: var(--bold-text-color); }
 .clearfix {
   &:before, &:after { content: ' '; display: table; }
   &:after { clear: both; }
-  *zoom: 1;
 }
 
 .container {
