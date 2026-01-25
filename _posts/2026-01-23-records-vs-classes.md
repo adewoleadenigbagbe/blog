@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 'Records vs Classes. A Complete Guide (With EF Core, Performance, and Real-World Usage)'
+title: 'Records vs Classes'
 date: 2026-01-23 12:00:00
 categories:
   - csharp
@@ -63,267 +63,91 @@ Console.WriteLine("Are both instance of the class equal : {0}", user2 == user3);
  
 ## Records: Data + Value Semantics
 
-A **record** represents **data**, not identity.
+A **record** is a reference type designed to represent immutable data, where value-based equality matters more than identity. Equality is based on the values not references. They are ideal for DTOs, messages, request/responses and configs.Below is how you declare a **record** in C#
 
 ``` csharp
 
-public record User(string Name);
+public record Product(Guid Id, string Name);
 
 ```
 
 ### Equality in Records
 ``` csharp
 
-var u1 = new User("John");
+var id = Guid.NewGuid();
 
-var u2 = new User("John");
+var product1 = new Product(id, "Toy");
+var product2 = new Product(id, "Toy");
 
-Console.WriteLine(u1 == u2); // true
+Console.WriteLine(product1 == product2); // true
+
+var product3 = new Product(Guid.NewGuid(), "Toy");
+Console.WriteLine("Are both instance of the record equal : {0}", product2 == product3); // return false
 
 ```
-Records use **value-based equality** by default.
 
-## 3. Why Records Exist (The Problem They Solve)
-
-Before records, DTOs looked like this:
+Before records was introduced in c# 9.0, fields equality comparism look like this with classes
 
 ``` csharp
 
-public class UserDto
-
+public class User
 {
     public string Name { get; init; }
 
-    public override bool Equals(object obj) { ... }
+    public int Age { get; init; }
 
-    public override int GetHashCode() { ... }
+    public override bool Equals(object? obj)
+    {
+        if(obj is not User other) 
+        {
+          return false;
+        }
+
+        return Name == other.Name && Age == other.Age;
+    }
+
+    public override int GetHashCode() => HashCode.Combine(Name, Age);
 }
 
 ```
 
-**Records generate all of this for you**: - Equality - Hash codes -
-
-`ToString()` - Copy semantics
-  
-
-## 4. Non-Destructive Mutation (`with`)
-
-Records are immutable by default --- but easy to copy.
+Records are immutable by default but easy to copy using **with** keyword. This is **huge** for Thread safety , predictable state
 
 ``` csharp
 
-var updated = user with { Name = "Alice" };
+var updatedUser = user with { Name = "Alice" };
 
 ```
 
-This is **huge** for: - Thread safety - Predictable state -
-
-Functional-style programming
-
-## 5. `record class` vs `record struct` vs `struct`
-
-### record class (default)
-
--   Reference type
-
--   Heap allocated
-
--   Value equality
-
+We do have record allocated on the heap (record class) which i discussed above and we have record allocated on the stack (record struct)
 ``` csharp
 
+// Record class - Use cases: Object size is moderate - Passed across layers - Used in APIs and DTOs
 public record Product(string Name);
 
-```
-**Use when**: - Object size is moderate - Passed across layers - Used in
-
-APIs and DTOs
-
-### struct
-
--   Value type
-
--   Stack allocated (mostly)
-
--   Mutable by default
-
--   No inheritance
-
-``` csharp
-
-public struct Point
-{
-
-    public int X;
-
-    public int Y;
-}
+//Record Struct - Use cases: Small, immutable value objects - High-performance
+public record struct Money(decimal Amount, string Currency);
 
 ```
 
-**Use when**: - Very small data - Performance-critical - No mutation
+### Difference between types
+----------------------------
 
-pitfalls
+| Type          | Allocation | Value Equality  | Immutability         |
+| ------------- | ---------- | --------------- | -------------------- |
+| class         | Heap       | No (by default) | No                   |
+| record        | Heap       | Yes             | Yes                  |
+| struct        | Stack      | Yes             | No                   |
+| record struct | Stack      | Yes             | No (Yes if readonly) |
 
 
-### record struct
-
--   Value type + value equality + immutability
-
-``` csharp
-
-public readonly record struct Money(decimal Amount, string Currency);
-
-```
-
-**Best for**: - Small, immutable value objects - High-performance
-
-domains - Financial and math models
-
-------------------------------------------------------------------------
-
-## 6. EF Core: Records vs Classes
-
-### ❌ Entity Models (Avoid Records)
-
-EF Core **expects mutable entities**.
-
-Problems with records: - Change tracking issues - Proxy generation -
-
-Required parameterless constructors
-
-``` csharp
-
-// ❌ Not recommended
-
-public record Order(Guid Id, decimal Total);
-
-```
-------------------------------------------------------------------------
-
-### ✅ DTOs & Projections (Perfect Use Case)
-
-``` csharp
-
-public record OrderDto(Guid Id, decimal Total);
-
-var orders = context.Orders
-
-    .Select(o => new OrderDto(o.Id, o.Total))
-
-    .ToList();
-
-```
-
-**Rule**: - **Entities → Class** - **DTOs → Record**
-
-## 7. Records and LINQ (Where They Shine)
-
-Records are ideal for LINQ projections:
-
-``` csharp
-
-var users = people
-
-    .Select(p => new UserDto(p.Name, p.Email))
-
-    .Distinct();
-
-```
-
-Value equality makes: - `Distinct()` - `GroupBy()` - `HashSet<T>`
-
-work correctly **without extra code**.
-
-
-## 8. Performance Considerations
-
-### Allocation
-
-  
-
-  Type            Allocation
-
-  --------------- ------------
-
-  class           Heap
-
-  record class    Heap
-
-  struct          Stack
-
-  record struct   Stack
-
-### Equality Cost
-
--   Records generate optimized `Equals`
-
--   Often **faster and safer** than handwritten overrides
-
-### Copy Cost
-
--   `with` creates a new instance
-
--   Fine for DTOs
-
--   Avoid in tight loops for large objects
-
-## 9. Records in Functional-Style C
-
-Records pair beautifully with: - Pattern matching - Immutability -
-
-Expressions
-
-``` csharp
-
-public record OrderState;
-
-public record Pending : OrderState;
-
-public record Paid : OrderState;
-
-string Describe(OrderState state) => state switch
-
-{
-
-    Pending => "Waiting for payment",
-
-    Paid => "Payment completed",
-
-    _ => "Unknown"
-
-};
-
-```
-This style: - Eliminates null checks - Avoids invalid states - Improves correctness
-
-
-## 10. When NOT to Use Records
-
-Avoid records when: - Identity matters - State changes frequently - You rely on ORMs for tracking - Object lifecycle is complex
-
-``` csharp
-
-public class BankAccount
-{
-    public decimal Balance { get; private set; }
-
-    public void Deposit(decimal amount) { ... }
-}
-
-```
-
-This should **never** be a record.
-
-
-
-## 11. Practical Decision Guide
+*Records don't replace classes --- they complete the type system.* Now lets discuss the use cases of both record and classes. What you should use them for and what you shouldnt use them for.
 
 ### Use **record** when:
 
 -   DTOs
 
--   API contracts
+-   API contracts (Request/Response)
 
 -   Messages/events
 
@@ -334,7 +158,8 @@ This should **never** be a record.
 -   Value objects
 
 ### Use **class** when:
--   Domain entities
+
+-   Domain entities (EF Entities)
 
 -   Services
 
@@ -352,8 +177,52 @@ This should **never** be a record.
 
 -   Financial or math domains
 
+### ✅ Example - DTOs & Linq Projections and Value Equality (Perfect Use Case)
 
-## 12. Final Rule of Thumb
+``` csharp
+
+public record OrderDto(Guid Id, decimal Total);
+
+var orders = context.Orders
+
+    .Select(o => new OrderDto(o.Id, o.Total))
+
+    .ToList();
+
+var users = people.Select(p => new UserDto(p.Name, p.Email)).Distinct();
+
+// Value equality makes: - `Distinct()` - `GroupBy()` - `HashSet<T>` work correctly **without extra code**.
+
+```
+
+
+## Records with Pattern matching
+
+
+``` csharp
+
+public record OrderState;
+
+public record Pending : OrderState;
+
+public record Paid : OrderState;
+
+string Describe(OrderState state) => state switch
+{
+
+    Pending => "Waiting for payment",
+
+    Paid => "Payment completed",
+
+    _ => "Unknown"
+
+};
+
+// This style: - Eliminates null checks - Avoids invalid states - Improves correctness
+
+```
+
+## Final Rule of Thumb
 
 > **Behavior → Class**
 
@@ -362,4 +231,4 @@ This should **never** be a record.
 > **Small immutable value → record struct**
 
 
-*Records don't replace classes --- they complete the type system.*
+You can get code samples for this post here [Records vs Classes](https://github.com/adewoleadenigbagbe/Blog-Code-Samples/tree/main/RecordsVsClasses)
