@@ -119,7 +119,7 @@ var updatedUser = user with { Name = "Alice" };
 
 ```
 
-We do have record allocated on the heap (record class) which i discussed above and we have record allocated on the stack (record struct)
+We do have record allocated on the heap (record class) which i discussed above and we also have record allocated on the stack (record struct)
 ``` csharp
 
 // Record class - Use cases: Object size is moderate - Passed across layers - Used in APIs and DTOs
@@ -130,16 +130,14 @@ public record struct Money(decimal Amount, string Currency);
 
 ```
 
-### Difference between types
-----------------------------
+### Difference between Types
 
-| Type          | Allocation | Value Equality  | Immutability         |
-| ------------- | ---------- | --------------- | -------------------- |
-| class         | Heap       | No (by default) | No                   |
-| record        | Heap       | Yes             | Yes                  |
-| struct        | Stack      | Yes             | No                   |
-| record struct | Stack      | Yes             | No (Yes if readonly) |
-
+| Type          | Allocation |  Value Equality | Immutability         |
+|---------------|------------|---------------|----------------------|
+|     class     |    Heap    | No (by default) |          No          |
+|     record    |    Heap    |       Yes       |          Yes         |
+|     struct    |    Stack   |       Yes       |          No          |
+| record struct |    Stack   |       Yes       | No (yes if readonly) |
 
 *Records don't replace classes --- they complete the type system.* Now lets discuss the use cases of both record and classes. What you should use them for and what you shouldnt use them for.
 
