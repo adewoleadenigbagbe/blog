@@ -261,3 +261,14 @@ hr {
   }
   .top-nav-link { padding: 0 5px; }
 }
+
+table{
+  border-collapse: collapse;
+}
+
+th,
+td{
+  padding: 10px 10px;
+  border: 1px solid white;
+   text-align: center;
+}
