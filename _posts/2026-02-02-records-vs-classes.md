@@ -1,7 +1,7 @@
 ---
 layout: post
 title: 'Records vs Classes'
-date: 2026-01-23 12:00:00
+date: 2026-02-02 12:00:00
 categories:
   - csharp
 ---
