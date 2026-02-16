@@ -15,13 +15,11 @@ Catching `Exception` hides intent and makes recovery logic unreliable.Only catch
 ❌ **Bad**
 ```c#
 try
-
 {
     ProcessFile();
 }
 
 catch (Exception ex)
-
 {
     Log(ex);
 }
@@ -31,19 +29,16 @@ catch (Exception ex)
 
 ```c#
 try
-
 {
     ProcessFile();
 }
 
 catch (IOException ex)
-
 {
     Log(ex);
 }
 
 catch (UnauthorizedAccessException ex)
-
 {
     Log(ex);
 }
@@ -57,7 +52,6 @@ The use of empty catch blocks are one of dangerous anti-patterns
 ```c#
 
 try
-
 {
     DoWork();
 }
@@ -72,7 +66,6 @@ catch
 ```c#
 
 try
-
 {
     DoWork();
 }
@@ -93,7 +86,6 @@ If you catch an exception to log it or add context, but you still need it to pro
 ```c#
 
 try
-
 {
     DoWork();
 }
@@ -125,11 +117,8 @@ Define your own exception types when the error is specific to your application's
 
 ```c#
 public class PaymentFailedException : Exception
-
 {
-
     public PaymentFailedException(string message) : base(message) {}
-
 }
 ```
 
@@ -141,7 +130,6 @@ Exception should not be returned for the user input, instead opt for validations
 ❌ **Bad**
 ```c#
 if (age < 0)
-
     throw new ArgumentException();
 
 ```
@@ -149,7 +137,6 @@ if (age < 0)
 ✅ **Good**
 ```c#
 if (age < 0)
-
     return Result.Fail("Age must be positive");
 ```
 
@@ -173,9 +160,12 @@ Exceptions are computationally expensive and should only be used for truly excep
 ❌ **Bad**
 
 ```c#
-try {
+try 
+{
     var result = dictionary["key"];
-} catch (KeyNotFoundException) {
+} 
+catch (KeyNotFoundException) 
+{
     // Handle not found
 }
 ```
@@ -183,9 +173,12 @@ try {
 ✅ **Good**
 
 ```c#
-if (dictionary.TryGetValue("key", out var result)) {
+if (dictionary.TryGetValue("key", out var result)) 
+{
     // Use result
-} else {
+} 
+else 
+{
     // Handle not found
 }
 
@@ -200,19 +193,13 @@ The code inside a finally block is guaranteed to execute, regardless of whether 
 FileStream stream = null;
 
 try
-
 {
-
     stream = OpenFile();
-
 }
 
 finally
-
 {
-
     stream?.Dispose();
-
 }
 
 //OR
@@ -230,27 +217,17 @@ app.UseExceptionHandler("/error");
 //OR
 
 app.Use(async (ctx, next) =>
-
 {
-
     try
-
     {
-
         await next();
-
     }
 
     catch (Exception ex)
-
     {
-
         Log(ex);
-
         throw;
-
     }
-
 });
 ```
 
