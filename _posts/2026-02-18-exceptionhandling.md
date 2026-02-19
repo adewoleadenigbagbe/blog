@@ -1,7 +1,7 @@
 ---
 layout: post
 title: 'Exception Handling Best Practices'
-date: 2026-03-03 12:00:00
+date: 2026-02-18 12:00:00
 categories:
   - csharp
 ---
