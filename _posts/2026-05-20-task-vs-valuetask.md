@@ -25,6 +25,8 @@ public async ValueTask<int> GetDataAsync()
 }
 ```
 
+![alt text](image.png)
+
 
 ### Limitations
 While ValueTask is a performance tool, it is not a replacement of Task, ValueTask should to be used to
@@ -66,3 +68,5 @@ var v1 =  ValueTaskMethod()
 Task.Run(async () => await v1)
 Task.Run(async () => await v1)
 ```
+
+You can get code samples for this post here [Task Vs ValueTask](https://github.com/adewoleadenigbagbe/Blog-Code-Samples/tree/main/TaskVsValueTask)
