@@ -1,12 +1,12 @@
 ---
 layout: post
 title: 'Functional Option and Builder Pattern In Go'
-date: 2026-02-02 12:00:00
+date: 2026-06-10 12:00:00
 categories:
   - golang
 ---
 
-When building an API or creating a library/module that can be consumed, there are two popular patterns in golang that can be used to build an object, the **functional option pattern** and the **builder pattern**. In this article i would explain with some code samples of how to implement it. Let dive into in straightaway
+When building an API or creating a library/module that will be consumed by a client, the consumer should be able to configure the state of an object, there are two popular patterns in golang that can be used to configure/build an object, the **Functional option pattern** and the **Builder pattern**. In this article i would explain with some code samples of how to implement it. Let dive into in straightaway
 
 
 ### Funtional Option Pattern
@@ -33,7 +33,7 @@ WithTimeout(30 * time.Second), WithTLS(true))
 
 
 ### Builder Pattern
-The builder pattern can be used to configure object via chained methods. It allows the fluent readablility, useful when the object creation is complex and when you want the validation to be centralized in a method whn build the object.
+The builder pattern can be used to configure object via chained methods. It allows the fluent readablility, useful when the object creation is complex and when you want the validation to be centralized in a method that build the object.
 
 ```go
 func (sb *ServerBuilder) Build() (Server, error) {
@@ -49,15 +49,16 @@ func (sb *ServerBuilder) Build() (Server, error) {
 ```
 
 #### Advantages
-- Centralized validation
+- Centralized validation in a method Build()
 - Step by step for complex object construction
+- Supports fluent APIs
 
 #### Disadvantages
-- Boilerplate - methods
-- Unidiomatic in Go (feels you are programming in OOP Languages)
+- More Boilerplate - methods
+- Less common in Go than Functional Options (feels you are programming in OOP Languages)
 
 
-### Summary
+### Key Difference
 
 | Functional Options pattern          | Builder Pattern                   |
 | ----------------------------- | --------------------------------- |
@@ -68,9 +69,9 @@ func (sb *ServerBuilder) Build() (Server, error) {
 | Very idiomatic in Go          | Less common in Go                 |
 | Great for optional config     | Great for complex workflows       |
 
+##### Final Thoughts
+Functional Options and Builder Pattern are not competitors as much as they are solutions to different kinds of complexity.We can construct object via any of the two patterns. You choose the one based on what you are trying to achieve. 
+
+Feel free to drop a comment if you love the post.
 
 You can get code samples for this post here [Functional Option and Builder Pattern In Go](https://github.com/adewoleadenigbagbe/Golang-Blog-Code-Samples/tree/main/patterns)
-
-
-
-
