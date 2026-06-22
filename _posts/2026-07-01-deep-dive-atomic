@@ -1,0 +1,241 @@
+---
+layout: post
+title: 'Deep Dive Sync-Atomic in Golang'
+date: 2026-07-10 12:00:00
+categories:
+  - golang
+---
+
+The Go package `sync/atomic` provides **low-level atomic memory primitives**.
+
+An operation is **atomic** if it happens as a single, indivisible step. No other goroutine can observe it halfway through.
+
+Think of it like a bank vault door:
+
+- Normal operation → someone could interrupt while you're changing a value.
+- Atomic operation → the change happens instantly from the perspective of other goroutines.
+
+
+Why Do We Need It?
+
+Imagine multiple goroutines incrementing a counter.
+
+```
+var counter int64
+
+func increment() {
+    counter++
+}
+
+```
+
+Looks simple, but `counter++` is actually:
+
+1. Read counter
+2. Add 1
+3. Write counter
+
+If two goroutines do this simultaneously:
+
+
+`Counter = 5`
+
+`Goroutine A reads 5`
+`Goroutine B reads 5`
+
+`A writes 6`
+`B writes 6`
+
+`Expected: 7`
+`Actual: 6`
+
+
+This is called a **race condition**. - Correctness
+
+
+Using Atomic Add
+
+
+```
+package main
+
+import (
+    "fmt"
+    "sync"
+    "sync/atomic"
+)
+
+func main() {
+    var counter int64
+
+    var wg sync.WaitGroup
+
+    for i := 0; i < 1000; i++ {
+        wg.Add(1)
+
+        go func() {
+            defer wg.Done()
+            atomic.AddInt64(&counter, 1)
+        }()
+    }
+
+    wg.Wait()
+
+    fmt.Println(counter)
+}
+```
+
+Output:
+
+1000
+
+Every increment is performed atomically.
+
+
+Common Atomic Operations
+
+
+```
+1. Add
+
+atomic.AddInt64(&counter, 1)
+
+```
+
+
+
+## 2. Load
+
+```
+Reads a value atomically.
+
+value := atomic.LoadInt64(&counter)
+```
+
+
+Use this instead of direct reads when another goroutine may be writing.
+
+
+## 3. Store
+
+Writes a value atomically.
+
+```
+atomic.StoreInt64(&counter, 100)
+```
+
+
+## 4. Swap
+
+Replace a value and get the old value.
+
+```
+old := atomic.SwapInt64(&counter, 50)
+
+```
+
+Example:
+
+```
+counter = 10
+
+old = 10
+counter = 50
+
+```
+
+## 5. Compare And Swap (CAS)
+
+The most powerful operation.
+
+```
+atomic.CompareAndSwapInt64(
+    &counter,
+    10,
+    20,
+)
+```
+
+Meaning:
+
+```
+If counter == 10
+    change it to 20
+Else
+    do nothing
+```
+
+Returns:
+
+```
+success := atomic.CompareAndSwapInt64(...)
+```
+
+# Why CAS Is Important
+
+CAS is the foundation of many lock-free data structures.
+
+Example:
+```
+
+for {
+    old := atomic.LoadInt64(&counter)
+
+    new := old + 1
+
+    if atomic.CompareAndSwapInt64(
+        &counter,
+        old,
+        new,
+    ) {
+        break
+    }
+}
+```
+
+```
+Workflow:
+
+Read current value
+Calculate new value
+Attempt update
+
+If another goroutine changed it:
+    Retry
+```
+
+This avoids using a mutex.
+
+
+New Atomic Types (Modern Go)
+
+Older style:
+
+```
+var count int64
+
+atomic.AddInt64(&count, 1)
+
+```
+
+Modern Go:
+
+```
+var count atomic.Int64
+
+count.Add(1)
+
+value := count.Load()
+
+```
+
+When Should You Use sync/atomic?
+
+Use atomics for:
+
+✅ Counters  
+✅ Metrics  
+✅ Flags  
+✅ Configuration switches  
+✅ Statistics  
+✅ Request tracking
