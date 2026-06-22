@@ -1,0 +1,112 @@
+---
+layout: post
+title: 'Visual Studio Debugging Tips'
+date: 2026-05-26 12:00:00
+categories:
+  - csharp
+---
+
+Today I will show you how to use debugger attributes in your code to make life easier while debugging your code on day to day basis
+
+There are APIs available ways while debugging your code  in tour favorite IDE. Here are some important ones you could use in your day to day work
+
+- DebuggerDisplay
+- DebuggerStepThrough
+-  DebuggerHidden
+- DebuggerNonUserCode
+- DebuggerBrowsable
+
+### DebuggerDisplay
+This is one of the most useful attributes. It allows you to control what appears or format of the data needs to be displayed in the debugger window. This is often used with classes
+
+```c#
+[DebuggerDisplay("This user Id is {Id} and FirstName is {FirstName} and LastName is {LastName}")]
+    public class Person
+    {
+        public int Id { get; set; }
+        
+        public int PrivateId { get; set; }
+
+        public string FirstName { get; set; }
+
+        public string LastName { get; set; }
+
+        public string Title { get; set; }
+
+        public string[] Address { get; set; }
+
+        public string PhoneNumber { get; set; }
+    }
+```
+
+### DebuggerStepThrough
+This denotes that when the debugger sees this method as marked, you would not step through when user press F11, it skips and jumps to the next line of code to be executed.Mostly used by frameworks for guard clauses , generated code, bolierplate code so devlopers dont waste time stepping through trivial methods
+
+```c#
+public static class EntityValidationHelper
+{
+    [DebuggerStepThrough]
+    public static bool IsValidName(string name)
+    {
+        return !string.IsNullOrWhiteSpace(name);
+    }
+}
+```
+
+### DebuggerHidden
+This literally tells the debugger to pretend like the code  does not exist
+```c#
+ public static class EntityValidationHelper
+ {
+     [DebuggerHidden]
+     public static bool IsPhoneNumber(string phone)
+     {
+         return !string.IsNullOrWhiteSpace(phone);
+     }
+ }
+```
+
+### DebuggerNonUserCode
+
+This tells debugger that this is framework/generated code, not user code so please skip it. When "Just My Code" is enabled , Debugger skips this method, common places used are 
+
+- Designer-generated code
+- Tool-generated code
+- Source generators
+- Proxy classes
+
+
+```c#
+[DebuggerNonUserCode]  
+public void GeneratedMethod()  
+{  
+}
+```
+
+
+### DebuggerBrowsable
+This controls how the members appear in debugger windows
+```c#
+    public class Person
+    {
+        public int Id { get; set; }
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        public int PrivateId { get; set; }
+
+        public string FirstName { get; set; }
+
+        public string LastName { get; set; }
+
+        public string Title { get; set; }
+
+        [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+        public string[] Addresses { get; set; }
+
+        public string PhoneNumber { get; set; }
+    }
+```
+
+As you can from the above code snippet, PrivateId would **never** in the debugger window, Addresses root member name would be hidden, so you would have the field name "Addresses" display in the debugger window
+
+Feel free to drop a comment if you love the post.
